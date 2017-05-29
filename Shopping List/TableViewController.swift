@@ -8,7 +8,7 @@
 
 import UIKit
 
-class TableViewController: UITableViewController {
+class TableViewController: UITableViewController, UIGestureRecognizerDelegate, UITextFieldDelegate {
     
     //var shoppingList = ["Apples", "Oranges", "Kiwis", "Bananas", "Bread", "Butter", "Cheese"]
     var shoppingList: [String] = []
@@ -25,15 +25,27 @@ class TableViewController: UITableViewController {
         }
     }
     
-    @IBAction func dismissKeyboard(_ sender: Any) {
-        TextFieldOutlet.resignFirstResponder()
+    @IBAction func EditItem(_ sender: Any) {
+        if isEditing {
+            setEditing(false, animated: true)
+        } else {
+            setEditing(true, animated: true)
+        }
+    }
+    
+    @IBAction func dismissKeyboard(_ sender: UITapGestureRecognizer) {
+        view.endEditing(true)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        shoppingList = savedShopplingList.object(forKey: "shoppingList") as? [String] ?? [String]()
+        let nib = UINib(nibName: "ShoppingListTableViewCell", bundle: nil)
+        self.tableView.register(nib, forCellReuseIdentifier: "ShoppingListTableViewCell")
         
+        //self.tableView.setEditing(true, animated: true)
+        
+        shoppingList = savedShopplingList.object(forKey: "shoppingList") as? [String] ?? [String]()
         
         // Uncomment the following line to preserve selection between presentations
         // self.clearsSelectionOnViewWillAppear = false
@@ -58,10 +70,10 @@ class TableViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "tableViewCell", for: indexPath)
-        cell.detailTextLabel?.text = shoppingList[indexPath.row]
-        cell.textLabel?.text = "row \(indexPath.row)"
-        cell.imageView?.image = #imageLiteral(resourceName: "Ton 120")
+        let cell: ShoppingListTableViewCell = tableView.dequeueReusableCell(withIdentifier: "ShoppingListTableViewCell", for: indexPath) as! ShoppingListTableViewCell
+        let currentShoppingItem = shoppingList[indexPath.row]
+        let currentShoppingRow = indexPath.row
+        cell.setDataForTableCell(shoppingListItem: currentShoppingItem, shoppingListRow: currentShoppingRow)
         return cell
     }
     
@@ -86,12 +98,21 @@ class TableViewController: UITableViewController {
         savedShopplingList.set(shoppingList, forKey: "shoppingList")
     }
     
-    /*
-     // Override to support rearranging the table view.
-     override func tableView(_ tableView: UITableView, moveRowAt fromIndexPath: IndexPath, to: IndexPath) {
-     
-     }
-     */
+    // Override to support rearranging the table view.
+    override func tableView(_ tableView: UITableView, moveRowAt fromIndexPath: IndexPath, to: IndexPath) {
+        let itemToMove = shoppingList[fromIndexPath.row]
+        shoppingList.remove(at: fromIndexPath.row)
+        shoppingList.insert(itemToMove, at: to.row)
+        savedShopplingList.set(shoppingList, forKey: "shoppingList")
+    }
+    
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        if gestureRecognizer is UITapGestureRecognizer {
+            let location = touch.location(in: tableView)
+            return (tableView.indexPathForRow(at: location) == nil)
+        }
+        return true
+    }
     
     /*
      // Override to support conditional rearranging of the table view.
@@ -111,4 +132,15 @@ class TableViewController: UITableViewController {
      }
      */
     
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        print("resign")
+        textField.resignFirstResponder()
+        return true
+    }
+ /*
+    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return tableView.rowHeight
+    }
+  */  
 }
+
