@@ -11,19 +11,49 @@ import UIKit
 class TableViewController: UITableViewController, UIGestureRecognizerDelegate, UITextFieldDelegate {
     
     //var shoppingList = ["Apples", "Oranges", "Kiwis", "Bananas", "Bread", "Butter", "Cheese"]
-    var shoppingList: [String] = []
-    var savedShopplingList = UserDefaults.standard
-    
-    @IBOutlet weak var TextFieldOutlet: UITextField!
-    
-    @IBAction func addItem(_ sender: Any) {
-        if TextFieldOutlet.text != "" {
-            shoppingList.append(TextFieldOutlet.text!)
-            TextFieldOutlet.text = ""
+    //var shoppingList: [String] = []
+    //var savedShoppingList = UserDefaults.standard
+    var shoppingItemArray: [ShoppingItem] = [] {
+        didSet{
+            //savedShoppingList.set(shoppingList, forKey: "shoppingList")
             self.tableView.reloadData()
-            savedShopplingList.set(shoppingList, forKey: "shoppingList")
         }
     }
+    var currentItem: ShoppingItem?
+    
+    @IBAction func addItem(_ sender: Any) {
+           //Creating UIAlertController and
+            //Setting title and message for the alert dialog
+            let alertController = UIAlertController(title: "Add Item", message: "Enter Name and Price", preferredStyle: .alert)
+            
+            //the confirm action taking the inputs
+            let confirmAction = UIAlertAction(title: "Add", style: .default) { (_) in
+                
+                //getting the input values from user
+                let name = alertController.textFields?[0].text
+                let price = alertController.textFields?[1].text 
+                self.shoppingItemArray.append(ShoppingItem(name: name!, price: price!))
+             }
+            
+            //the cancel action doing nothing
+            let cancelAction = UIAlertAction(title: "Cancel", style: .cancel) { (_) in }
+            
+            //adding textfields to our dialog box
+            alertController.addTextField { (textField) in
+                textField.placeholder = "Enter Name"
+            }
+            alertController.addTextField { (textField) in
+                textField.placeholder = "Enter Price"
+            }
+            
+            //adding the action to dialogbox
+            alertController.addAction(confirmAction)
+            alertController.addAction(cancelAction)
+            
+            //finally presenting the dialog box
+            self.present(alertController, animated: true, completion: nil)
+        }
+    
     
     @IBAction func EditItem(_ sender: Any) {
         if isEditing {
@@ -42,10 +72,11 @@ class TableViewController: UITableViewController, UIGestureRecognizerDelegate, U
         
         let nib = UINib(nibName: "ShoppingListTableViewCell", bundle: nil)
         self.tableView.register(nib, forCellReuseIdentifier: "ShoppingListTableViewCell")
+        shoppingItemArray = ShoppingItemService.getTheDataFromShoppingService()
         
         //self.tableView.setEditing(true, animated: true)
         
-        shoppingList = savedShopplingList.object(forKey: "shoppingList") as? [String] ?? [String]()
+        //shoppingList = savedShoppingList.object(forKey: "shoppingList") as? [String] ?? [String]()
         
         // Uncomment the following line to preserve selection between presentations
         // self.clearsSelectionOnViewWillAppear = false
@@ -66,14 +97,13 @@ class TableViewController: UITableViewController, UIGestureRecognizerDelegate, U
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return shoppingList.count
+        return shoppingItemArray.count
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell: ShoppingListTableViewCell = tableView.dequeueReusableCell(withIdentifier: "ShoppingListTableViewCell", for: indexPath) as! ShoppingListTableViewCell
-        let currentShoppingItem = shoppingList[indexPath.row]
-        let currentShoppingRow = indexPath.row
-        cell.setDataForTableCell(shoppingListItem: currentShoppingItem, shoppingListRow: currentShoppingRow)
+        let currentShoppingItem = shoppingItemArray[indexPath.row]
+        cell.setDataForTableCell(shoppingListItem: currentShoppingItem)
         return cell
     }
     
@@ -90,20 +120,17 @@ class TableViewController: UITableViewController, UIGestureRecognizerDelegate, U
         print("editingStyle", editingStyle)
         if editingStyle == .delete {
             // tableView.deleteRows(at: [indexPath], with: .fade)
-            shoppingList.remove(at: indexPath.row)
+            shoppingItemArray.remove(at: indexPath.row)
         } else if editingStyle == .insert {
             // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
         }
-        self.tableView.reloadData()
-        savedShopplingList.set(shoppingList, forKey: "shoppingList")
     }
     
     // Override to support rearranging the table view.
     override func tableView(_ tableView: UITableView, moveRowAt fromIndexPath: IndexPath, to: IndexPath) {
-        let itemToMove = shoppingList[fromIndexPath.row]
-        shoppingList.remove(at: fromIndexPath.row)
-        shoppingList.insert(itemToMove, at: to.row)
-        savedShopplingList.set(shoppingList, forKey: "shoppingList")
+        let itemToMove = shoppingItemArray[fromIndexPath.row]
+        shoppingItemArray.remove(at: fromIndexPath.row)
+        shoppingItemArray.insert(itemToMove, at: to.row)
     }
     
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
@@ -122,15 +149,13 @@ class TableViewController: UITableViewController, UIGestureRecognizerDelegate, U
      }
      */
     
-    /*
-     // MARK: - Navigation
-     
-     // In a storyboard-based application, you will often want to do a little preparation before navigation
-     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-     // Get the new view controller using segue.destinationViewController.
-     // Pass the selected object to the new view controller.
-     }
-     */
+    // In a storyboard-based application, you will often want to do a little preparation before navigation
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "detailView" {
+            let detailView = segue.destination as! DetailViewController
+            detailView.theItem = currentItem
+        }
+    }
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         print("resign")
@@ -142,5 +167,18 @@ class TableViewController: UITableViewController, UIGestureRecognizerDelegate, U
         return tableView.rowHeight
     }
   */  
+
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        currentItem = shoppingItemArray[indexPath.row]
+        self.performSegue(withIdentifier: "detailView", sender: self)
+        print("selectRow") // wordt nooit uitgevoerd
+   }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.tableView.reloadData()
+    }
+
 }
 
