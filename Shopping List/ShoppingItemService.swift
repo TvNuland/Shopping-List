@@ -32,6 +32,10 @@ class DataProvider {
                 print("Error while retrieving data from Firebase")
             }
         })
+        
+        ref.child("ShoppingItems").observe(.childAdded, with: { (snapshot) -> Void in
+            print("childAdded")
+        })
     }
     
     
@@ -44,6 +48,9 @@ class DataProvider {
     public func removeShopItem(shopItem: ShoppingItems) {
         ref.child("ShoppingItems").child(shopItem.uniqueKey).removeValue()
     }
+    
+
+
     
 }
 
