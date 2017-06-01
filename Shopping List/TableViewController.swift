@@ -1,5 +1,5 @@
 //
-//  TableTableViewController.swift
+//  TableViewController.swift
 //  Shopping List
 //
 //  Created by Ton on 2017-05-25.
@@ -10,49 +10,47 @@ import UIKit
 
 class TableViewController: UITableViewController, UIGestureRecognizerDelegate, UITextFieldDelegate {
     
-    //var shoppingList = ["Apples", "Oranges", "Kiwis", "Bananas", "Bread", "Butter", "Cheese"]
-    //var shoppingList: [String] = []
-    //var savedShoppingList = UserDefaults.standard
-    var shoppingItemArray: [ShoppingItem] = [] {
+    var shoppingItemArray: [ShoppingItems] = [] {
         didSet{
-            //savedShoppingList.set(shoppingList, forKey: "shoppingList")
             self.tableView.reloadData()
         }
     }
-    var currentItem: ShoppingItem?
+    var currentItem: ShoppingItems?
     
     @IBAction func addItem(_ sender: Any) {
-           //Creating UIAlertController and
-            //Setting title and message for the alert dialog
-            let alertController = UIAlertController(title: "Add Item", message: "Enter Name and Price", preferredStyle: .alert)
+        //Creating UIAlertController and
+        //Setting title and message for the alert dialog
+        let alertController = UIAlertController(title: "Add Item", message: "Enter Name and Price", preferredStyle: .alert)
+        
+        //the confirm action taking the inputs
+        let confirmAction = UIAlertAction(title: "Add", style: .default) { (_) in
             
-            //the confirm action taking the inputs
-            let confirmAction = UIAlertAction(title: "Add", style: .default) { (_) in
-                
-                //getting the input values from user
-                let name = alertController.textFields?[0].text
-                let price = alertController.textFields?[1].text 
-                self.shoppingItemArray.append(ShoppingItem(name: name!, price: price!))
-             }
-            
-            //the cancel action doing nothing
-            let cancelAction = UIAlertAction(title: "Cancel", style: .cancel) { (_) in }
-            
-            //adding textfields to our dialog box
-            alertController.addTextField { (textField) in
-                textField.placeholder = "Enter Name"
-            }
-            alertController.addTextField { (textField) in
-                textField.placeholder = "Enter Price"
-            }
-            
-            //adding the action to dialogbox
-            alertController.addAction(confirmAction)
-            alertController.addAction(cancelAction)
-            
-            //finally presenting the dialog box
-            self.present(alertController, animated: true, completion: nil)
+            //getting the input values from user
+            let name = alertController.textFields?[0].text
+            let price = alertController.textFields?[1].text
+            let newShoppingItem = ShoppingItems(name: name!, price: price!, description: "empty")
+            self.shoppingItemArray.append(newShoppingItem)
+            DataProvider.sharedInstance.addOrEditShopItem(shopItem: newShoppingItem)
         }
+        
+        //the cancel action doing nothing
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel) { (_) in }
+        
+        //adding textfields to our dialog box
+        alertController.addTextField { (textField) in
+            textField.placeholder = "Enter Name"
+        }
+        alertController.addTextField { (textField) in
+            textField.placeholder = "Enter Price"
+        }
+        
+        //adding the action to dialogbox
+        alertController.addAction(confirmAction)
+        alertController.addAction(cancelAction)
+        
+        //finally presenting the dialog box
+        self.present(alertController, animated: true, completion: nil)
+    }
     
     
     @IBAction func EditItem(_ sender: Any) {
@@ -72,11 +70,11 @@ class TableViewController: UITableViewController, UIGestureRecognizerDelegate, U
         
         let nib = UINib(nibName: "ShoppingListTableViewCell", bundle: nil)
         self.tableView.register(nib, forCellReuseIdentifier: "ShoppingListTableViewCell")
-        shoppingItemArray = ShoppingItemService.getTheDataFromShoppingService()
         
-        //self.tableView.setEditing(true, animated: true)
+        DataProvider.sharedInstance.getShoppingListData()
         
-        //shoppingList = savedShoppingList.object(forKey: "shoppingList") as? [String] ?? [String]()
+        // Register to receive notification data
+        NotificationCenter.default.addObserver(self, selector: #selector(TableViewController.notifyObservers), name:  NSNotification.Name(rawValue: "gotShoppingListData" ), object: nil)
         
         // Uncomment the following line to preserve selection between presentations
         // self.clearsSelectionOnViewWillAppear = false
@@ -84,6 +82,13 @@ class TableViewController: UITableViewController, UIGestureRecognizerDelegate, U
         // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
         // self.navigationItem.rightBarButtonItem = self.editButtonItem()
     }
+    
+    
+    func notifyObservers(notification: NSNotification) {
+        var shopItemDict = notification.userInfo as! Dictionary<String, [ShoppingItems]>
+        shoppingItemArray = shopItemDict["shoppingItems"]!
+    }
+
     
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
@@ -120,6 +125,7 @@ class TableViewController: UITableViewController, UIGestureRecognizerDelegate, U
         print("editingStyle", editingStyle)
         if editingStyle == .delete {
             // tableView.deleteRows(at: [indexPath], with: .fade)
+            DataProvider.sharedInstance.removeShopItem(shopItem: shoppingItemArray[indexPath.row])
             shoppingItemArray.remove(at: indexPath.row)
         } else if editingStyle == .insert {
             // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
@@ -162,23 +168,23 @@ class TableViewController: UITableViewController, UIGestureRecognizerDelegate, U
         textField.resignFirstResponder()
         return true
     }
- /*
-    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return tableView.rowHeight
-    }
-  */  
-
+    /*
+     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+     return tableView.rowHeight
+     }
+     */
+    
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         currentItem = shoppingItemArray[indexPath.row]
         self.performSegue(withIdentifier: "detailView", sender: self)
         print("selectRow") // wordt nooit uitgevoerd
-   }
-
+    }
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         self.tableView.reloadData()
     }
-
+    
 }
 

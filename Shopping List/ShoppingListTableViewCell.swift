@@ -27,10 +27,11 @@ class ShoppingListTableViewCell: UITableViewCell {
         // Configure the view for the selected state
     }
     
-    func setDataForTableCell(shoppingListItem: ShoppingItem) {
+    func setDataForTableCell(shoppingListItem: ShoppingItems) {
         self.shoppingListImageView.image = #imageLiteral(resourceName: "shopping-icon")
         self.titleLabel?.text = shoppingListItem.name
-        self.detailTextView.text = "Price: \(shoppingListItem.price)"
+        self.detailTextView?.text = shoppingListItem.price
+        DataProvider.sharedInstance.addOrEditShopItem(shopItem: shoppingListItem)
     }
         
 }

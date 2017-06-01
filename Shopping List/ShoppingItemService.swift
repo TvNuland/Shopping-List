@@ -7,117 +7,161 @@
 //
 
 import Foundation
+import FirebaseDatabase
 
-class ShoppingItemService {
+class DataProvider {
     
+    public static let sharedInstance = DataProvider()  // Singleton: https://en.wikipedia.org/wiki/Singleton_pattern
     
-    //{
-    //    "ShoppingItems": [
-    //        {
-    //        "name": "Coffee",
-    //        "price": 5.50
-    //        },
-    //        {
-    //        "name": "Milk",
-    //        "price": 1
-    //        },
-    //        {
-    //        "name": "Sugar",
-    //        "price": 1.2
-    //        },
-    //        {
-    //        "name": "Lemons",
-    //        "price": 0.5
-    //        },
-    //        {
-    //        "name": "Turnips",
-    //        "price": 0.5
-    //        },
-    //        {
-    //        "name": "Carrots",
-    //        "price": 2
-    //        },
-    //        {
-    //        "name": "Shampoo",
-    //        "price": 5
-    //        },
-    //        {
-    //        "name": "Chicken",
-    //        "price": 1.5
-    //        },
-    //        {
-    //        "name": "Meditation Mat",
-    //        "price": 10
-    //        },
-    //        {
-    //        "name": "Cream",
-    //        "price": 2
-    //        },
-    //        {
-    //        "name": "Frogs Legs",
-    //        "price": 14.5
-    //        },
-    //        {
-    //        "name": "Bitter Ballen",
-    //        "price": 3.5
-    //        },
-    //        {
-    //        "name": "Beard Trimmer",
-    //        "price": 14
-    //        }
-    //    ]
-    //}
-    
-    class func getData() -> NSDictionary {
-        //Here is the escaped string...just imagine this is our data retrieved from a server! Like for real!!!
-        let itemsJSONString = "{\r\n    \"ShoppingItems\": [\r\n        {\r\n        \"name\": \"Coffee\",\r\n        \"price\": \"5.50\"\r\n        },\r\n        {\r\n        \"name\": \"Milk\",\r\n        \"price\": \"1\"\r\n        },\r\n        {\r\n        \"name\": \"Sugar\",\r\n        \"price\": \"1.2\"\r\n        },\r\n        {\r\n        \"name\": \"Lemons\",\r\n        \"price\": \"0.5\"\r\n        },\r\n        {\r\n        \"name\": \"Turnips\",\r\n        \"price\": \"0.5\"\r\n        },\r\n        {\r\n        \"name\": \"Carrots\",\r\n        \"price\": \"2\"\r\n        },\r\n        {\r\n        \"name\": \"Shampoo\",\r\n        \"price\": \"5\"\r\n        },\r\n        {\r\n        \"name\": \"Chicken\",\r\n        \"price\": \"1.5\"\r\n        },\r\n        {\r\n        \"name\": \"Meditation Mat\",\r\n        \"price\": \"10\"\r\n        },\r\n        {\r\n        \"name\": \"Cream\",\r\n        \"price\": \"2\"\r\n        },\r\n        {\r\n        \"name\": \"Frogs Legs\",\r\n        \"price\": \"14.5\"\r\n        },\r\n        {\r\n        \"name\": \"Bitter Ballen\",\r\n        \"price\": \"3.5\"\r\n        },\r\n        {\r\n        \"name\": \"Beard Trimmer\",\r\n        \"price\": \"14\"\r\n        }\r\n    ]\r\n}\r\n"
-        
-        return itemsJSONString.parseJSONString as! NSDictionary
+    private init() {
     }
     
-    class func getTheDataFromShoppingService() -> [ShoppingItem] {
-        var shoppingItemArray: [ShoppingItem] = []
-        let JSONDictionary = ShoppingItemService.getData() as NSDictionary
-        let arrayOfDictionaries = JSONDictionary["ShoppingItems"] as! NSArray //Array<String>
-        
-        for shoppingItemDictionary in arrayOfDictionaries {
-            let aShoppingItemDictionary = shoppingItemDictionary as! NSDictionary
-            let aShoppingItemDictionaryName = aShoppingItemDictionary["name"] as! String
-            let aShoppingItemDictionaryPrice = aShoppingItemDictionary["price"] as! String
-            let shopItem = ShoppingItem.init(name: aShoppingItemDictionaryName, price: aShoppingItemDictionaryPrice)
-            shoppingItemArray.append(shopItem)
-            
-        }
-        
-        return shoppingItemArray
+    var ref: DatabaseReference!
+    
+    public func getShoppingListData() {
+        ref = Database.database().reference()
+        ref.observeSingleEvent(of: .value, with: { (snapshot) in
+            if let data = snapshot.value as? NSDictionary,
+                let shoppingtems = data["ShoppingItems"] as? NSDictionary {
+                let shoppingModelsDataArray = ShoppingItems.modelsFromDictionaryOf(dictionaries: shoppingtems)
+                
+                let shoppingData = ["shoppingItems": shoppingModelsDataArray]
+                NotificationCenter.default.post(name: Notification.Name(rawValue: "gotShoppingListData"), object: self, userInfo: shoppingData)
+                
+            } else {
+                print("Error while retrieving data from Firebase")
+            }
+        })
+    }
+    
+    
+    public func addOrEditShopItem(shopItem: ShoppingItems) {
+        var shopItemDict: Dictionary<String, String>
+        shopItemDict = ["key": shopItem.uniqueKey, "name": shopItem.name!, "price": shopItem.price!, "description": shopItem.description!]
+         ref.child("ShoppingItems").child(shopItem.uniqueKey).setValue(shopItemDict)
+    }
+    
+    public func removeShopItem(shopItem: ShoppingItems) {
+        ref.child("ShoppingItems").child(shopItem.uniqueKey).removeValue()
     }
     
 }
 
-//The clever parsed, it deserialises the JSON, don't worry about it too much lot of complicated things here
-extension String {
-    
-    var parseJSONString: AnyObject? {
-        
-        let data = self.data(using: String.Encoding.utf8, allowLossyConversion: false)
-        
-        if let jsonData = data {
-            do {
-                let message = try JSONSerialization.jsonObject(with: jsonData, options:.mutableContainers)
-                return message as AnyObject?
-            }
-            catch let error as NSError
-            {
-                print("An error occurred: \(error)")
-                return nil
-            }
-            
-            // Will return an object or nil if JSON decoding fails
-        } else {
-            // Lossless conversion of the string was not possible
-            return nil
-        }
-    }
-    
-}
+//call: DataProvider.sharedInstance.getShoppingListData() in ViewDidLoad
 
+
+/*
+ class ShoppingItemService {
+ 
+ 
+ //{
+ //    "ShoppingItems": [
+ //        {
+ //        "name": "Coffee",
+ //        "price": 5.50
+ //        },
+ //        {
+ //        "name": "Milk",
+ //        "price": 1
+ //        },
+ //        {
+ //        "name": "Sugar",
+ //        "price": 1.2
+ //        },
+ //        {
+ //        "name": "Lemons",
+ //        "price": 0.5
+ //        },
+ //        {
+ //        "name": "Turnips",
+ //        "price": 0.5
+ //        },
+ //        {
+ //        "name": "Carrots",
+ //        "price": 2
+ //        },
+ //        {
+ //        "name": "Shampoo",
+ //        "price": 5
+ //        },
+ //        {
+ //        "name": "Chicken",
+ //        "price": 1.5
+ //        },
+ //        {
+ //        "name": "Meditation Mat",
+ //        "price": 10
+ //        },
+ //        {
+ //        "name": "Cream",
+ //        "price": 2
+ //        },
+ //        {
+ //        "name": "Frogs Legs",
+ //        "price": 14.5
+ //        },
+ //        {
+ //        "name": "Bitter Ballen",
+ //        "price": 3.5
+ //        },
+ //        {
+ //        "name": "Beard Trimmer",
+ //        "price": 14
+ //        }
+ //    ]
+ //}
+ 
+ class func getData() -> NSDictionary {
+ //Here is the escaped string...just imagine this is our data retrieved from a server! Like for real!!!
+ let itemsJSONString = "{\r\n    \"ShoppingItems\": [\r\n        {\r\n        \"name\": \"Coffee\",\r\n        \"price\": \"5.50\"\r\n        },\r\n        {\r\n        \"name\": \"Milk\",\r\n        \"price\": \"1\"\r\n        },\r\n        {\r\n        \"name\": \"Sugar\",\r\n        \"price\": \"1.2\"\r\n        },\r\n        {\r\n        \"name\": \"Lemons\",\r\n        \"price\": \"0.5\"\r\n        },\r\n        {\r\n        \"name\": \"Turnips\",\r\n        \"price\": \"0.5\"\r\n        },\r\n        {\r\n        \"name\": \"Carrots\",\r\n        \"price\": \"2\"\r\n        },\r\n        {\r\n        \"name\": \"Shampoo\",\r\n        \"price\": \"5\"\r\n        },\r\n        {\r\n        \"name\": \"Chicken\",\r\n        \"price\": \"1.5\"\r\n        },\r\n        {\r\n        \"name\": \"Meditation Mat\",\r\n        \"price\": \"10\"\r\n        },\r\n        {\r\n        \"name\": \"Cream\",\r\n        \"price\": \"2\"\r\n        },\r\n        {\r\n        \"name\": \"Frogs Legs\",\r\n        \"price\": \"14.5\"\r\n        },\r\n        {\r\n        \"name\": \"Bitter Ballen\",\r\n        \"price\": \"3.5\"\r\n        },\r\n        {\r\n        \"name\": \"Beard Trimmer\",\r\n        \"price\": \"14\"\r\n        }\r\n    ]\r\n}\r\n"
+ 
+ return itemsJSONString.parseJSONString as! NSDictionary
+ }
+ 
+ class func getTheDataFromShoppingService() -> [ShoppingItem] {
+ var shoppingItemArray: [ShoppingItem] = []
+ let JSONDictionary = ShoppingItemService.getData() as NSDictionary
+ let arrayOfDictionaries = JSONDictionary["ShoppingItems"] as! NSArray //Array<String>
+ 
+ for shoppingItemDictionary in arrayOfDictionaries {
+ let aShoppingItemDictionary = shoppingItemDictionary as! NSDictionary
+ let aShoppingItemDictionaryName = aShoppingItemDictionary["name"] as! String
+ let aShoppingItemDictionaryPrice = aShoppingItemDictionary["price"] as! String
+ let shopItem = ShoppingItem.init(name: aShoppingItemDictionaryName, price: aShoppingItemDictionaryPrice)
+ shoppingItemArray.append(shopItem)
+ 
+ }
+ 
+ return shoppingItemArray
+ }
+ 
+ }
+ 
+ //The clever parsed, it deserialises the JSON, don't worry about it too much lot of complicated things here
+ extension String {
+ 
+ var parseJSONString: AnyObject? {
+ 
+ let data = self.data(using: String.Encoding.utf8, allowLossyConversion: false)
+ 
+ if let jsonData = data {
+ do {
+ let message = try JSONSerialization.jsonObject(with: jsonData, options:.mutableContainers)
+ return message as AnyObject?
+ }
+ catch let error as NSError
+ {
+ print("An error occurred: \(error)")
+ return nil
+ }
+ 
+ // Will return an object or nil if JSON decoding fails
+ } else {
+ // Lossless conversion of the string was not possible
+ return nil
+ }
+ }
+ 
+ }
+ 
+ */

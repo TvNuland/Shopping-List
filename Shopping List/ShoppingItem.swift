@@ -5,7 +5,7 @@
 //  Created by Ton on 2017-05-29.
 //  Copyright © 2017 Ton van Nuland. All rights reserved.
 //
-
+/*
 import Foundation
 
 
@@ -18,3 +18,4 @@ class ShoppingItem: NSObject {
         self.price = price
     }
 }
+*/

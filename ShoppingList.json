@@ -1,0 +1,70 @@
+ 
+{
+    "ShoppingItems": [
+        {
+        "name": "Coffee",
+        "price": "5.50",
+ 		"description": "Morning stuff"
+        },
+        {
+        "name": "Milk",
+        "price": "1",
+		"description": "From Cows"
+        },
+        {
+        "name": "Sugar",
+        "price": "1.2",
+		"description": ""
+        },
+        {
+        "name": "Lemons",
+        "price": "0.5",
+		"description": ""
+        },
+        {
+        "name": "Turnips",
+        "price": "0.5",
+		"description": ""
+        },
+        {
+        "name": "Carrots",
+        "price": "2",
+		"description": ""
+        },
+        {
+        "name": "Shampoo",
+        "price": "5",
+		"description": ""
+        },
+        {
+        "name": "Chicken",
+        "price": "1.5",
+		"description": ""
+        },
+        {
+        "name": "Meditation Mat",
+        "price": "10",
+		"description": ""
+        },
+        {
+        "name": "Cream",
+        "price": "2",
+		"description": ""
+        },
+        {
+        "name": "Frogs Legs",
+        "price": "14.5",
+		"description": ""
+        },
+        {
+        "name": "Bitter Ballen",
+        "price": "3.5",
+		"description": ""
+        },
+        {
+        "name": "Beard Trimmer",
+        "price": "14",
+		"description": ""
+        }
+    ]
+}

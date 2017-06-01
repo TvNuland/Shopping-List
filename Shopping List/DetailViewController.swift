@@ -9,21 +9,21 @@
 import UIKit
 
 class DetailViewController: UIViewController {
-
+    
     @IBOutlet weak var nameText: UITextField!
     @IBOutlet weak var priceText: UITextField!
     @IBOutlet weak var descriptionText: UILabel!
     
-    var theItem: ShoppingItem?
-
+    var theItem: ShoppingItems?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
         // Do any additional setup after loading the view.
         self.nameText.text = theItem?.name
         self.priceText.text = theItem?.price
- }
-
+    }
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
@@ -35,5 +35,4 @@ class DetailViewController: UIViewController {
         theItem?.price = priceText.text!
     }
     
-
 }
