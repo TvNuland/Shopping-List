@@ -16,6 +16,7 @@ class TableViewController: UITableViewController, UIGestureRecognizerDelegate, U
         }
     }
     var currentItem: ShoppingItems?
+//    var imageStore: ImageStore!
     
     @IBAction func addItem(_ sender: Any) {
         //Creating UIAlertController and
@@ -29,7 +30,7 @@ class TableViewController: UITableViewController, UIGestureRecognizerDelegate, U
             let name = alertController.textFields?[0].text
             let price = alertController.textFields?[1].text
             let newShoppingItem = ShoppingItems(name: name!, price: price!, description: "empty")
-            self.shoppingItemArray.append(newShoppingItem)
+            //           self.shoppingItemArray.append(newShoppingItem)
             DataProvider.sharedInstance.addOrEditShopItem(shopItem: newShoppingItem)
         }
         
@@ -72,6 +73,7 @@ class TableViewController: UITableViewController, UIGestureRecognizerDelegate, U
         self.tableView.register(nib, forCellReuseIdentifier: "ShoppingListTableViewCell")
         
         DataProvider.sharedInstance.getShoppingListData()
+        DataProvider.sharedInstance.setupObservers()
         
         // Register to receive notification data
         NotificationCenter.default.addObserver(self, selector: #selector(TableViewController.notifyObservers), name:  NSNotification.Name(rawValue: "gotShoppingListData" ), object: nil)
@@ -125,8 +127,9 @@ class TableViewController: UITableViewController, UIGestureRecognizerDelegate, U
         print("editingStyle", editingStyle)
         if editingStyle == .delete {
             // tableView.deleteRows(at: [indexPath], with: .fade)
+            ImageStore.sharedInstance.deleteImage(forKey: shoppingItemArray[indexPath.row].uniqueKey)
             DataProvider.sharedInstance.removeShopItem(shopItem: shoppingItemArray[indexPath.row])
-            shoppingItemArray.remove(at: indexPath.row)
+//            shoppingItemArray.remove(at: indexPath.row)
         } else if editingStyle == .insert {
             // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
         }
@@ -178,7 +181,6 @@ class TableViewController: UITableViewController, UIGestureRecognizerDelegate, U
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         currentItem = shoppingItemArray[indexPath.row]
         self.performSegue(withIdentifier: "detailView", sender: self)
-        print("selectRow") // wordt nooit uitgevoerd
     }
     
     override func viewWillAppear(_ animated: Bool) {

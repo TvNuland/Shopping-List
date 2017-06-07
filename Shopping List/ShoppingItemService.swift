@@ -9,9 +9,11 @@
 import Foundation
 import FirebaseDatabase
 
+// Singleton: https://en.wikipedia.org/wiki/Singleton_pattern
+
 class DataProvider {
     
-    public static let sharedInstance = DataProvider()  // Singleton: https://en.wikipedia.org/wiki/Singleton_pattern
+    public static let sharedInstance = DataProvider()
     
     private init() {
     }
@@ -33,24 +35,30 @@ class DataProvider {
             }
         })
         
-        ref.child("ShoppingItems").observe(.childAdded, with: { (snapshot) -> Void in
-            print("childAdded")
+    }
+    
+    public func setupObservers() {
+        ref.child("ShoppingItems").observe(.value, with: { (snapshot) -> Void in
+            if snapshot.value != nil {
+                DataProvider.sharedInstance.getShoppingListData()
+            }
         })
+        
     }
     
     
     public func addOrEditShopItem(shopItem: ShoppingItems) {
         var shopItemDict: Dictionary<String, String>
         shopItemDict = ["key": shopItem.uniqueKey, "name": shopItem.name!, "price": shopItem.price!, "description": shopItem.description!]
-         ref.child("ShoppingItems").child(shopItem.uniqueKey).setValue(shopItemDict)
+        ref.child("ShoppingItems").child(shopItem.uniqueKey).setValue(shopItemDict)
     }
     
     public func removeShopItem(shopItem: ShoppingItems) {
         ref.child("ShoppingItems").child(shopItem.uniqueKey).removeValue()
     }
     
-
-
+    
+    
     
 }
 

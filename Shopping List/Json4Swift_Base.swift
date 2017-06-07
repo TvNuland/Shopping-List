@@ -51,13 +51,15 @@ public class Json4Swift_Base {
 /**
     Returns the dictionary representation for the current instance.
     - returns: NSDictionary.
-*/
-	public func dictionaryRepresentation() -> NSDictionary {
+
+    
+    public func dictionaryRepresentation() -> NSDictionary {
 
 		let dictionary = NSMutableDictionary()
 
 		return dictionary
 	}
-
+ 
+  */
 }
 

@@ -9,7 +9,7 @@
 import UIKit
 
 class ShoppingListTableViewCell: UITableViewCell {
-
+    
     @IBOutlet weak var shoppingListImageView: UIImageView!
     
     @IBOutlet weak var titleLabel: UILabel!
@@ -20,18 +20,24 @@ class ShoppingListTableViewCell: UITableViewCell {
         super.awakeFromNib()
         // Initialization code
     }
-
+    
     override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
-
+        
         // Configure the view for the selected state
     }
     
     func setDataForTableCell(shoppingListItem: ShoppingItems) {
-        self.shoppingListImageView.image = #imageLiteral(resourceName: "shopping-icon")
+        if let image = ImageStore.sharedInstance.image(forKey: shoppingListItem.uniqueKey) {
+            self.shoppingListImageView.image = image
+        }
+        else {
+            self.shoppingListImageView.image = #imageLiteral(resourceName: "shopping-icon")
+            
+        }
         self.titleLabel?.text = shoppingListItem.name
         self.detailTextView?.text = shoppingListItem.price
         DataProvider.sharedInstance.addOrEditShopItem(shopItem: shoppingListItem)
     }
-        
+    
 }
